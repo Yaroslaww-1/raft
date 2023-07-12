@@ -5,6 +5,8 @@ import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
+import ucu.edu.clients.Client
+import ucu.edu.node.Node
 import ucu.edu.plugins.*
 
 fun main() {
@@ -16,5 +18,9 @@ fun Application.module() {
     install(ContentNegotiation) {
         json()
     }
-    configureRouting()
+
+    val clients = listOf<Client>()
+    val node = Node(clients)
+
+    configureRouting(node)
 }
