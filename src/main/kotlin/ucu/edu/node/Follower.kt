@@ -5,7 +5,7 @@ import ucu.edu.proto.RequestVote
 import ucu.edu.utils.RandomisedTimer
 
 class Follower(val node: Node) : State {
-    private val heartbeatTimer = RandomisedTimer(node.scaledTime(150), node.scaledTime(300)) {
+    private var heartbeatTimer = RandomisedTimer(150, 300) {
         node.transitTo(Candidate(node))
     }
 
@@ -23,6 +23,7 @@ class Follower(val node: Node) : State {
         if (granted) {
             node.term = req.term
             node.votedFor = req.candidateId
+            heartbeatTimer.restart()
         }
 
         return RequestVote.Response(node.term, granted)
