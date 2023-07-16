@@ -17,6 +17,10 @@ class Node(
     private val config = Config(1)
     private var state: State = Follower(this)
 
+    fun isLeader() = this.state is Leader
+    fun isFollower() = this.state is Follower
+    fun isCandidate() = this.state is Candidate
+
     fun canVote(candidateTerm: Int, candidateId: Int): Boolean {
         if (candidateTerm > term) return true
         if (candidateTerm == term && (votedFor == null || votedFor == candidateId)) return true
@@ -49,13 +53,5 @@ class Node(
 
     suspend fun appendEntries(req: AppendEntries.Request): AppendEntries.Response {
         return this.state.appendEntries(req);
-    }
-
-    fun isLeader(): Boolean {
-        return this.state is Leader
-    }
-
-    fun isFollower(): Boolean {
-        return this.state is Follower
     }
 }
