@@ -3,21 +3,21 @@ package ucu.edu
 import kotlinx.coroutines.delay
 import org.assertj.core.api.Assertions.assertThat
 import ucu.edu.clients.LocalClient
-import ucu.edu.node.Context
+import ucu.edu.node.Node
 import ucu.edu.utils.repeatedTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 
 class LeaderElectionTest {
-    private fun clusterOfThree(): List<Context> {
+    private fun clusterOfThree(): List<Node> {
         val client1 = LocalClient()
         val client2 = LocalClient()
         val client3 = LocalClient()
 
-        val node1 = Context(1, listOf(client2, client3))
-        val node2 = Context(2, listOf(client1, client3))
-        val node3 = Context(3, listOf(client1, client2))
+        val node1 = Node(1, listOf(client2, client3))
+        val node2 = Node(2, listOf(client1, client3))
+        val node3 = Node(3, listOf(client1, client2))
 
         client1.initialize(node1)
         client2.initialize(node2)

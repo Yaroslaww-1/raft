@@ -4,7 +4,7 @@ import kotlinx.coroutines.*
 import ucu.edu.proto.AppendEntries
 import ucu.edu.proto.RequestVote
 
-class Candidate(val context: Context) : State {
+class Candidate(val node: Node) : State {
     private var election: Job? = null
 
     override fun start() {
@@ -20,18 +20,18 @@ class Candidate(val context: Context) : State {
     }
 
     private suspend fun startLeaderElection() {
-        context.term++
+        node.term++
 
         val votes = mutableSetOf<Int>()
-        context.votedFor = context.nodeId
-        votes.add(context.nodeId)
-        val requiredVotes = context.majority
+        node.votedFor = node.id
+        votes.add(node.id)
+        val requiredVotes = node.majority
 
-        context.clients
+        node.clients
             .map {
                 val request = RequestVote.Request(
-                    context.term,
-                    context.nodeId,
+                    node.term,
+                    node.id,
                 )
 
                 // TODO: add retry here with election timeout
@@ -42,10 +42,10 @@ class Candidate(val context: Context) : State {
                     }
                 }
             }
-            .mapNotNull { withTimeoutOrNull(50 * context.config.timeScale) { it.await() } }
+            .mapNotNull { withTimeoutOrNull(node.scaledTime(50)) { it.await() } }
             .forEach { (client, response) ->
-                if (response.term > context.term) {
-                    transitToFollower()
+                if (response.term > node.term) {
+                    node.transitTo(Follower(node))
                     return@startLeaderElection
                 }
 
@@ -54,44 +54,34 @@ class Candidate(val context: Context) : State {
                 }
 
                 if (votes.size >= requiredVotes) {
-                    transitToLeader()
+                    node.transitTo(Leader(node))
                     return@startLeaderElection
                 }
             }
     }
 
     override suspend fun requestVote(req: RequestVote.Request): RequestVote.Response {
-        println("candidate ${context.nodeId} requestVote")
-        val granted = context.canVote(req.term, req.candidateId)
+        println("candidate ${node.id} requestVote")
+        val granted = node.canVote(req.term, req.candidateId)
 
         if (granted) {
-            context.term = req.term
-            context.votedFor = req.candidateId
-            transitToFollower()
+            node.term = req.term
+            node.votedFor = req.candidateId
+            node.transitTo(Follower(node))
         }
 
-        return RequestVote.Response(context.term, granted)
+        return RequestVote.Response(node.term, granted)
     }
 
     override suspend fun appendEntries(req: AppendEntries.Request): AppendEntries.Response {
-        println("candidate ${context.nodeId} appendEntries")
-        if (req.term > context.term) {
-            context.term = req.term
-            context.votedFor = null
-            transitToFollower()
-            return AppendEntries.Response(context.term, true)
+        println("candidate ${node.id} appendEntries")
+        if (req.term > node.term) {
+            node.term = req.term
+            node.votedFor = null
+            node.transitTo(Follower(node))
+            return AppendEntries.Response(node.term, true)
         }
 
-        return AppendEntries.Response(context.term, false)
-    }
-
-    fun transitToFollower() {
-        println("candidate ${context.nodeId} to follower")
-        context.setState(Follower(context))
-    }
-
-    fun transitToLeader() {
-        println("candidate ${context.nodeId} to leader")
-        context.setState(Leader(context))
+        return AppendEntries.Response(node.term, false)
     }
 }

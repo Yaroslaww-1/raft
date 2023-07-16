@@ -1,15 +1,15 @@
 package ucu.edu.clients
 
 import kotlinx.coroutines.delay
-import ucu.edu.node.Context
+import ucu.edu.node.Node
 import ucu.edu.proto.AppendEntries
 import ucu.edu.proto.RequestVote
 
 class LocalClient : Client {
-    private lateinit var backend: Context
+    private lateinit var backend: Node
     private var enabled = true
 
-    fun initialize(backend: Context) {
+    fun initialize(backend: Node) {
         this.backend = backend
     }
 
@@ -32,6 +32,6 @@ class LocalClient : Client {
     }
 
     override fun nodeId(): Int {
-        return backend.nodeId
+        return backend.id
     }
 }

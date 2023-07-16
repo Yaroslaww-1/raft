@@ -3,11 +3,10 @@ package ucu.edu.node
 import ucu.edu.proto.AppendEntries
 import ucu.edu.proto.RequestVote
 import ucu.edu.utils.RandomisedTimer
-import java.time.Instant
 
-class Follower(val context: Context) : State {
-    private val heartbeatTimer = RandomisedTimer(150 * context.config.timeScale, 300 * context.config.timeScale) {
-        transitToCandidate()
+class Follower(val node: Node) : State {
+    private val heartbeatTimer = RandomisedTimer(node.scaledTime(150), node.scaledTime(300)) {
+        node.transitTo(Candidate(node))
     }
 
     override fun start() {
@@ -19,31 +18,26 @@ class Follower(val context: Context) : State {
     }
 
     override suspend fun requestVote(req: RequestVote.Request): RequestVote.Response {
-        println("follower ${context.nodeId} requestVote")
-        val granted = context.canVote(req.term, req.candidateId)
+        println("follower ${node.id} requestVote")
+        val granted = node.canVote(req.term, req.candidateId)
 
         if (granted) {
-            context.term = req.term
-            context.votedFor = req.candidateId
+            node.term = req.term
+            node.votedFor = req.candidateId
         }
 
-        return RequestVote.Response(context.term, granted)
+        return RequestVote.Response(node.term, granted)
     }
 
     override suspend fun appendEntries(req: AppendEntries.Request): AppendEntries.Response {
-        println("follower ${context.nodeId} appendEntries")
-        if (req.term > context.term) {
-            context.term = req.term
-            context.votedFor = null
+        println("follower ${node.id} appendEntries")
+        if (req.term > node.term) {
+            node.term = req.term
+            node.votedFor = null
         }
 
         heartbeatTimer.restart()
 
-        return AppendEntries.Response(context.term, true)
-    }
-
-    private fun transitToCandidate() {
-        println("follower ${context.nodeId} to candidate ${Instant.now()}")
-        context.setState(Candidate(context))
+        return AppendEntries.Response(node.term, true)
     }
 }
