@@ -21,6 +21,8 @@ class Node(
     fun isFollower() = this.state is Follower
     fun isCandidate() = this.state is Candidate
 
+    fun stateName() = state.javaClass.simpleName
+
     fun canVote(candidateTerm: Int, candidateId: Int): Boolean {
         if (candidateTerm > term) return true
         if (candidateTerm == term && (votedFor == null || votedFor == candidateId)) return true
@@ -42,16 +44,18 @@ class Node(
 
     fun transitTo(state: State) {
         this.state.stop()
-        println("node $id to ${state.javaClass.canonicalName}")
+        println("node $id to ${stateName()}")
         this.state = state
         this.state.start()
     }
 
     suspend fun requestVote(req: RequestVote.Request): RequestVote.Response {
+        println("${stateName()} ${id} requestVote")
         return this.state.requestVote(req);
     }
 
     suspend fun appendEntries(req: AppendEntries.Request): AppendEntries.Response {
+        println("${stateName()} ${id} appendEntries")
         return this.state.appendEntries(req);
     }
 }

@@ -18,7 +18,6 @@ class Follower(val node: Node) : State {
     }
 
     override suspend fun requestVote(req: RequestVote.Request): RequestVote.Response {
-        println("follower ${node.id} requestVote")
         val granted = node.canVote(req.term, req.candidateId)
 
         if (granted) {
@@ -30,7 +29,6 @@ class Follower(val node: Node) : State {
     }
 
     override suspend fun appendEntries(req: AppendEntries.Request): AppendEntries.Response {
-        println("follower ${node.id} appendEntries")
         if (req.term > node.term) {
             node.term = req.term
             node.votedFor = null
