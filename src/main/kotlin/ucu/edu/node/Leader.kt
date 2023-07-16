@@ -3,14 +3,17 @@ package ucu.edu.node
 import kotlinx.coroutines.*
 import ucu.edu.proto.AppendEntries
 import ucu.edu.proto.RequestVote
+import java.time.Instant
 import java.util.*
+import kotlin.concurrent.fixedRateTimer
 import kotlin.concurrent.timerTask
 
 class Leader(val node: Node) : State {
-    private var heartbeatTimer: Timer = Timer()
+    private var heartbeatTimer: Timer? = null
 
     override fun start() {
-        heartbeatTimer.schedule(timerTask {
+        heartbeatTimer = fixedRateTimer("Leader heartbeat", initialDelay = 0, period = 50) {
+            println("leader STARTING TO SEND $node ${Instant.now()}")
             runBlocking {
                 node.clients
                     .map {
@@ -19,12 +22,15 @@ class Leader(val node: Node) : State {
                             node.id,
                         )
 
+                        yield()
+
                         async {
+                            println("leader sends $node-${node.id} -> ${it.nodeId()} ${Instant.now()}")
                             val response = it.appendEntries(request)
                             if (response == null) null else it to response
                         }
                     }
-                    .mapNotNull { withTimeoutOrNull(node.scaledTime(50)) { it.await() } }
+                    .mapNotNull { withTimeoutOrNull(30) { it.await() } }
                     .forEach { (client, response) ->
                         when {
                             response.success -> {
@@ -36,11 +42,14 @@ class Leader(val node: Node) : State {
                         }
                     }
             }
-        }, node.scaledTime(100), node.scaledTime(100))
+        }
     }
 
     override fun stop() {
-        heartbeatTimer.cancel()
+        println("leader ${node} trying to cancel ${Instant.now()}")
+        heartbeatTimer!!.cancel()
+        println("leader ${node} cancelled ${Instant.now()}")
+        heartbeatTimer!!.purge()
     }
 
     override suspend fun requestVote(req: RequestVote.Request): RequestVote.Response {
