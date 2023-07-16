@@ -1,11 +1,14 @@
 package ucu.edu.utils
 
 import kotlinx.coroutines.delay
+import ucu.edu.clients.Client
 import ucu.edu.clients.LocalClient
 import ucu.edu.node.Node
+import java.time.Instant
 
 class Cluster(
-    val nodes: List<Node>
+    val nodes: List<Node>,
+    val clients: List<Client>
 ) {
     companion object {
         fun ofThree(): Cluster {
@@ -21,12 +24,31 @@ class Cluster(
             client2.initialize(node2)
             client3.initialize(node3)
 
-            return Cluster(listOf(node1, node2, node3))
+            return Cluster(
+                listOf(node1, node2, node3),
+                listOf(client1, client2, client3)
+            )
         }
     }
 
     fun startAll() {
         nodes.forEach { it.start() }
+    }
+
+    suspend fun stopAll() {
+        nodes.forEach { it.stop() }
+        nodes.forEach { println("node ${it} STOPPED") }
+        delay(1000)
+    }
+
+    fun isolate(node: Node) {
+        println("[${Instant.now()}] isolating ${node.id}")
+        clients.find { it.nodeId() == node.id }!!.disable()
+        node.stop()
+    }
+
+    fun reEnable(node: Node) {
+        clients.find { it.nodeId() == node.id }!!.reEnable()
     }
 
     suspend fun waitForElectionToFinish() {

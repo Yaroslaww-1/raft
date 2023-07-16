@@ -1,15 +1,15 @@
 package ucu.edu
 
+import junit.framework.TestCase.assertFalse
 import org.assertj.core.api.Assertions.assertThat
 import ucu.edu.utils.Cluster
 import ucu.edu.utils.repeatedTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 
 class LeaderElectionTest {
     @Test
-    fun clusterIsStableAndLeaderIsElected() = repeatedTest(5) {
+    fun clusterIsStableAndLeaderIsElected() = repeatedTest(10) {
         val cluster = Cluster.ofThree()
         cluster.startAll()
 
@@ -20,10 +20,12 @@ class LeaderElectionTest {
 
         assertEquals(1, leaders.count())
         assertEquals(2, followers.count())
+
+        cluster.stopAll()
     }
 
     @Test
-    fun leaderCanBeIsolatedFromClusterAndCatchUpAfter() = repeatedTest(5) {
+    fun leaderCanBeIsolatedFromClusterAndCatchUpAfter() = repeatedTest(10) {
         val cluster = Cluster.ofThree()
         cluster.startAll()
 
@@ -32,9 +34,9 @@ class LeaderElectionTest {
         val oldLeader = cluster.nodes.find { it.isLeader() }!!
         val oldTerm = oldLeader.term
 
-        oldLeader.stop()
+        cluster.isolate(oldLeader)
         cluster.waitForElectionToFinish()
-        oldLeader.start()
+        cluster.reEnable(oldLeader)
         cluster.waitForElectionToFinish()
 
         val newLeader = cluster.nodes.find { it.isLeader() }!!

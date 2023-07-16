@@ -13,21 +13,21 @@ class LocalClient : Client {
         this.backend = backend
     }
 
-    fun enable() {
-        enabled = true
-    }
-
-    fun disable() {
+    override fun disable() {
         enabled = false
     }
 
+    override fun reEnable() {
+        enabled = true
+    }
+
     override suspend fun requestVote(req: RequestVote.Request): RequestVote.Response? {
-        delay((10..20).random().toLong())
+        delay((5..10).random().toLong())
         return if (enabled) backend.requestVote(req) else null
     }
 
     override suspend fun appendEntries(req: AppendEntries.Request): AppendEntries.Response? {
-        delay((10..20).random().toLong())
+        delay((5..10).random().toLong())
         return if (enabled) backend.appendEntries(req) else null
     }
 

@@ -2,10 +2,10 @@ package ucu.edu.utils
 
 import kotlinx.coroutines.runBlocking
 
-fun repeatedTest(times: Int, body: suspend () -> Unit) {
+fun repeatedTest(times: Int, body: suspend () -> Unit) = runBlocking {
     repeat(times) {
-        runBlocking {
-            body()
-        }
+        println("-------------------------------TEST STARTED-------------------------------")
+        body()
+        println("-------------------------------TEST ENDED-------------------------------")
     }
 }

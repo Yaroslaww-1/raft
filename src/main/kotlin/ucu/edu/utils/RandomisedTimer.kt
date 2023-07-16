@@ -15,6 +15,7 @@ class RandomisedTimer(
     private var timer = Timer()
 
     fun start() {
+        timer = Timer()
         timer.schedule(interval) {
             action()
         }
@@ -22,7 +23,7 @@ class RandomisedTimer(
 
     fun cancel() {
         timer.cancel()
-        timer = Timer()
+        timer.purge()
     }
 
     fun restart() {
