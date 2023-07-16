@@ -6,7 +6,7 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
 import ucu.edu.clients.Client
-import ucu.edu.node.Node
+import ucu.edu.node.Context
 import ucu.edu.plugins.*
 
 fun main() {
@@ -20,7 +20,7 @@ fun Application.module() {
     }
 
     val clients = listOf<Client>()
-    val node = Node(clients)
+    val node = Context(1, clients)
 
     configureRouting(node)
 }

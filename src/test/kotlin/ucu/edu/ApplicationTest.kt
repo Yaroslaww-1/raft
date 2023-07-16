@@ -8,7 +8,7 @@ import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.testing.*
 import ucu.edu.clients.Client
-import ucu.edu.node.Node
+import ucu.edu.node.Context
 import ucu.edu.plugins.configureRouting
 import ucu.edu.proto.RequestVote
 import kotlin.test.*
@@ -28,14 +28,14 @@ class ApplicationTest {
             }
 
             val clients = listOf<Client>()
-            val node = Node(clients)
+            val node = Context(1, clients)
 
             configureRouting(node)
         }
 
         val response = client.post("/votes") {
             contentType(ContentType.Application.Json)
-            setBody(RequestVote.Request(1, 1, 1, 1))
+            setBody(RequestVote.Request(1, 1))
         }
         assertEquals(HttpStatusCode.OK, response.status)
         assertEquals(RequestVote.Response(1, true), response.body())
