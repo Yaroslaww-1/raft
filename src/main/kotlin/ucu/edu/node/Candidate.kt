@@ -10,16 +10,18 @@ class Candidate(val node: Node) : State {
     override fun start() {
         election = GlobalScope.launch {
             while (true) {
+                yield()
                 startLeaderElection()
             }
         }
     }
 
     override fun stop() {
-        election?.cancel()
+        election!!.cancel()
     }
 
     private suspend fun startLeaderElection() {
+        println("node ${node} ${node.id} START LEADER ELECTION")
         node.term++
 
         val votes = mutableSetOf<Int>()
@@ -42,7 +44,7 @@ class Candidate(val node: Node) : State {
                     }
                 }
             }
-            .mapNotNull { withTimeoutOrNull(node.scaledTime(50)) { it.await() } }
+            .mapNotNull { withTimeoutOrNull(30) { it.await() } }
             .forEach { (client, response) ->
                 if (response.term > node.term) {
                     node.transitTo(Follower(node))
@@ -58,6 +60,8 @@ class Candidate(val node: Node) : State {
                     return@startLeaderElection
                 }
             }
+
+        delay((150L..300L).random())
     }
 
     override suspend fun requestVote(req: RequestVote.Request): RequestVote.Response {
@@ -73,7 +77,7 @@ class Candidate(val node: Node) : State {
     }
 
     override suspend fun appendEntries(req: AppendEntries.Request): AppendEntries.Response {
-        if (req.term > node.term) {
+        if (req.term >= node.term) {
             node.term = req.term
             node.votedFor = null
             node.transitTo(Follower(node))
