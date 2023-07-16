@@ -4,6 +4,8 @@ import ucu.edu.clients.Client
 import ucu.edu.config.Config
 import ucu.edu.proto.AppendEntries
 import ucu.edu.proto.RequestVote
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 class Node(
     val id: Int,
@@ -13,8 +15,8 @@ class Node(
 
     var term: Int = 1
     var votedFor: Int? = null
+    var running = true
 
-    private val config = Config(1)
     private var state: State = Follower(this)
 
     fun isLeader() = this.state is Leader
@@ -31,31 +33,29 @@ class Node(
     }
 
     fun start() {
+        running = true
         state.start()
     }
 
     fun stop() {
+        running = false
         state.stop()
     }
 
-    fun scaledTime(base: Long): Long {
-        return base * config.timeScale
-    }
-
     fun transitTo(state: State) {
+        println("[${Instant.now()}] node $id to ${state.javaClass.simpleName}")
         this.state.stop()
-        println("node $id to ${stateName()}")
         this.state = state
-        this.state.start()
+        if (running) this.state.start()
     }
 
     suspend fun requestVote(req: RequestVote.Request): RequestVote.Response {
-        println("${stateName()} ${id} requestVote")
-        return this.state.requestVote(req);
+        println("[${Instant.now()}] ${stateName()} ${id} requestVote from ${req.candidateId}")
+        return this.state.requestVote(req)
     }
 
     suspend fun appendEntries(req: AppendEntries.Request): AppendEntries.Response {
-        println("${stateName()} ${id} appendEntries")
-        return this.state.appendEntries(req);
+        println("[${Instant.now()}] ${stateName()} ${id} appendEntries ${req.leaderId}")
+        return this.state.appendEntries(req)
     }
 }
