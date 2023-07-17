@@ -44,5 +44,7 @@ class LeaderElectionTest {
 
         assertThat(newTerm).isGreaterThan(oldTerm)
         assertFalse(oldLeader.isLeader())
+
+        cluster.stopAll()
     }
 }

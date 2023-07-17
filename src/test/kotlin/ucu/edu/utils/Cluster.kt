@@ -37,8 +37,9 @@ class Cluster(
 
     suspend fun stopAll() {
         nodes.forEach { it.stop() }
-        nodes.forEach { println("node ${it} STOPPED") }
+        nodes.forEach { println("node ${it} TRYING TO STOP") }
         delay(1000)
+        nodes.forEach { println("node ${it} STOPPED") }
     }
 
     fun isolate(node: Node) {
@@ -52,6 +53,10 @@ class Cluster(
     }
 
     suspend fun waitForElectionToFinish() {
+        delay(1000)
+    }
+
+    suspend fun waitForReplicationToFinish() {
         delay(1000)
     }
 }

@@ -34,6 +34,8 @@ class Candidate(val node: Node) : State {
                 val request = RequestVote.Request(
                     node.term,
                     node.id,
+                    node.log.prevIndex(),
+                    node.log.lastTerm()
                 )
 
                 // TODO: add retry here with election timeout
@@ -65,7 +67,7 @@ class Candidate(val node: Node) : State {
     }
 
     override suspend fun requestVote(req: RequestVote.Request): RequestVote.Response {
-        val granted = node.canVote(req.term, req.candidateId)
+        val granted = node.canVote(req)
 
         if (granted) {
             node.term = req.term
@@ -77,13 +79,11 @@ class Candidate(val node: Node) : State {
     }
 
     override suspend fun appendEntries(req: AppendEntries.Request): AppendEntries.Response {
-        if (req.term >= node.term) {
-            node.term = req.term
-            node.votedFor = null
-            node.transitTo(Follower(node))
-            return AppendEntries.Response(node.term, true)
-        }
+        if (req.term < node.term) return AppendEntries.Response(node.term, false)
 
-        return AppendEntries.Response(node.term, false)
+        node.term = req.term
+        node.votedFor = null
+        node.transitTo(Follower(node))
+        return AppendEntries.Response(node.term, node.log.tryAppend(req))
     }
 }

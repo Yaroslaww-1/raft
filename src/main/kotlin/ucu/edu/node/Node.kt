@@ -2,6 +2,7 @@ package ucu.edu.node
 
 import ucu.edu.clients.Client
 import ucu.edu.config.Config
+import ucu.edu.log.Log
 import ucu.edu.proto.AppendEntries
 import ucu.edu.proto.RequestVote
 import java.time.Instant
@@ -16,6 +17,7 @@ class Node(
     var term: Int = 1
     var votedFor: Int? = null
     var running = true
+    var log = Log()
 
     private var state: State = Follower(this)
 
@@ -25,11 +27,17 @@ class Node(
 
     fun stateName() = state.javaClass.simpleName
 
-    fun canVote(candidateTerm: Int, candidateId: Int): Boolean {
-        if (candidateTerm > term) return true
-        if (candidateTerm == term && (votedFor == null || votedFor == candidateId)) return true
-        // TODO add logIndex checks
-        return false
+    fun canVote(candidate: RequestVote.Request): Boolean {
+        if (candidate.term < term) return false
+
+        if (candidate.term == term) return (votedFor == null || votedFor == candidate.candidateId)
+
+        if (candidate.term > term) {
+            if (log.isNotEmpty() && candidate.lastLogTerm < log.lastTerm()) return false
+            if (log.isNotEmpty() && candidate.lastLogTerm == log.lastTerm() && candidate.lastLogIndex < log.prevIndex()) return false
+        }
+
+        return true
     }
 
     fun start() {
@@ -55,7 +63,19 @@ class Node(
     }
 
     suspend fun appendEntries(req: AppendEntries.Request): AppendEntries.Response {
-        println("[${Instant.now()}] ${stateName()} ${id} appendEntries ${req.leaderId}")
+        println("[${Instant.now()}] ${stateName()} ${id} appendEntries ${req.leaderId} ${req.entries}")
         return this.state.appendEntries(req)
+    }
+
+    fun appendCommand(command: String) {
+        if (!isLeader()) {
+            throw Exception("Cannot append command on non-leader node!")
+        }
+
+        (state as Leader).appendCommand(command)
+    }
+
+    fun getCommands(): List<String> {
+        return log.getValues()
     }
 }

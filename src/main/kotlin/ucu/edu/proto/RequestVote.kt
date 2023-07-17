@@ -7,8 +7,8 @@ object RequestVote {
     data class Request(
         val term: Int,
         val candidateId: Int,
-//        val lastLogIndex: Int,
-//        val lastLogTerm: Int
+        val lastLogIndex: Int,
+        val lastLogTerm: Int
     )
 
     @Serializable

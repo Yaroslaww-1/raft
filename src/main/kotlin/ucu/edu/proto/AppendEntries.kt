@@ -13,10 +13,10 @@ object AppendEntries {
     data class Request(
         val term: Int,
         val leaderId: Int,
-//        val prevLogIndex: Int,
-//        val prevLogTerm: Int,
-//        val entries: List<LogEntry>,
-//        val leaderCommit: Int
+        val prevLogIndex: Int,
+        val prevLogTerm: Int,
+        val entries: List<LogEntry>,
+        val leaderCommit: Int
     )
 
     @Serializable

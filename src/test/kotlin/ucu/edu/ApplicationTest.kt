@@ -35,7 +35,7 @@ class ApplicationTest {
 
         val response = client.post("/votes") {
             contentType(ContentType.Application.Json)
-            setBody(RequestVote.Request(1, 1))
+            setBody(RequestVote.Request(1, 1, 0, 0))
         }
         assertEquals(HttpStatusCode.OK, response.status)
         assertEquals(RequestVote.Response(1, true), response.body())
