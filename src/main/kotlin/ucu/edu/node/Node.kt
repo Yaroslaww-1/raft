@@ -1,5 +1,8 @@
 package ucu.edu.node
 
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import ucu.edu.clients.Client
 import ucu.edu.config.Config
 import ucu.edu.log.Log
@@ -67,12 +70,22 @@ class Node(
         return this.state.appendEntries(req)
     }
 
-    fun appendCommand(command: String) {
-        if (!isLeader()) {
-            throw Exception("Cannot append command on non-leader node!")
-        }
+    suspend fun appendCommand(command: String, depth: Int = 0) {
+        if (depth > 1) return
 
-        (state as Leader).appendCommand(command)
+        if (!isLeader()) {
+            clients
+                .map {
+                    coroutineScope {
+                        async {
+                            it.appendCommand(command, depth + 1)
+                        }
+                    }
+                }
+                .map { it.await() }
+        } else {
+            (state as Leader).appendCommand(command)
+        }
     }
 
     fun getCommands(): List<String> {

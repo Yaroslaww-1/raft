@@ -31,6 +31,10 @@ class LocalClient : Client {
         return if (enabled) backend.appendEntries(req) else null
     }
 
+    override suspend fun appendCommand(command: String, depth: Int) {
+        backend.appendCommand(command, depth)
+    }
+
     override fun nodeId(): Int {
         return backend.id
     }

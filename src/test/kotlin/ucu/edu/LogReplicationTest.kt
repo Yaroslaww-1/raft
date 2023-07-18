@@ -60,4 +60,28 @@ class LogReplicationTest {
 
         cluster.stopAll()
     }
+
+    @Test
+    fun appendCommandToFollowerSuccessfullyReplicated() = repeatedTest(10) {
+        val cluster = Cluster.ofThree()
+        cluster.startAll()
+
+        cluster.waitForElectionToFinish()
+
+        val follower = cluster.nodes.filter { it.isFollower() }.first()
+
+        follower.appendCommand("1")
+        follower.appendCommand("3")
+        follower.appendCommand("2")
+
+        cluster.waitForReplicationToFinish()
+
+        val expected = listOf("1", "3", "2")
+
+        for (node in cluster.nodes) {
+            assertEquals(expected, node.getCommands())
+        }
+
+        cluster.stopAll()
+    }
 }
