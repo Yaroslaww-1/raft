@@ -9,6 +9,7 @@ class Candidate(val node: Node) : State {
 
     override fun start() {
         election = GlobalScope.launch {
+            delay(50)
             while (true) {
                 yield()
                 startLeaderElection()
@@ -17,7 +18,7 @@ class Candidate(val node: Node) : State {
     }
 
     override fun stop() {
-        election!!.cancel()
+        election?.cancel()
     }
 
     private suspend fun startLeaderElection() {
@@ -80,6 +81,10 @@ class Candidate(val node: Node) : State {
 
     override suspend fun appendEntries(req: AppendEntries.Request): AppendEntries.Response {
         if (req.term < node.term) return AppendEntries.Response(node.term, false)
+
+        if (req.leaderId != node.id) {
+            node.transitTo(Follower(node))
+        }
 
         node.term = req.term
         node.votedFor = null

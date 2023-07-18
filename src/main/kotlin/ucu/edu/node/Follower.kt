@@ -41,6 +41,10 @@ class Follower(val node: Node) : State {
             node.votedFor = null
         }
 
+        if (req.leaderId != node.id) {
+            node.transitTo(Follower(node))
+        }
+
         return AppendEntries.Response(node.term, node.log.tryAppend(req))
     }
 }

@@ -104,6 +104,11 @@ class Leader(val node: Node) : State {
             node.transitTo(Follower(node))
         }
 
+        if (req.leaderId != node.id) {
+            println("Multiple leaders ${req.leaderId}")
+            node.transitTo(Follower(node))
+        }
+
         return AppendEntries.Response(node.term, true)
     }
 

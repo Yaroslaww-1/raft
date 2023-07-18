@@ -7,7 +7,7 @@ import kotlin.test.assertEquals
 
 class LogReplicationTest {
     @Test
-    fun commandSuccessfullyReplicated() = repeatedTest(1) {
+    fun commandSuccessfullyReplicated() = repeatedTest(10) {
         val cluster = Cluster.ofThree()
         cluster.startAll()
 
@@ -31,7 +31,7 @@ class LogReplicationTest {
     }
 
     @Test
-    fun followerCatchUp() = repeatedTest(1) {
+    fun followerCatchUp() = repeatedTest(10) {
         val cluster = Cluster.ofThree()
         cluster.startAll()
 

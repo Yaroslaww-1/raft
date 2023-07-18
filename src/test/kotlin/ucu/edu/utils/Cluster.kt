@@ -38,7 +38,7 @@ class Cluster(
     suspend fun stopAll() {
         nodes.forEach { it.stop() }
         nodes.forEach { println("node ${it} TRYING TO STOP") }
-        delay(1000)
+        delay(500)
         nodes.forEach { println("node ${it} STOPPED") }
     }
 
@@ -57,6 +57,6 @@ class Cluster(
     }
 
     suspend fun waitForReplicationToFinish() {
-        delay(1000)
+        delay(500)
     }
 }
