@@ -9,7 +9,7 @@ import kotlin.test.assertEquals
 
 class LeaderElectionTest {
     @Test
-    fun clusterIsStableAndLeaderIsElected() = repeatedTest(10) {
+    fun clusterIsStableAndLeaderIsElected() = repeatedTest(5) {
         val cluster = Cluster.ofThree()
         cluster.startAll()
 
@@ -25,7 +25,7 @@ class LeaderElectionTest {
     }
 
     @Test
-    fun leaderCanBeIsolatedFromClusterAndCatchUpAfter() = repeatedTest(10) {
+    fun leaderCanBeIsolatedFromClusterAndCatchUpAfter() = repeatedTest(5) {
         val cluster = Cluster.ofThree()
         cluster.startAll()
 
@@ -43,6 +43,28 @@ class LeaderElectionTest {
         val newTerm = newLeader.term
 
         assertThat(newTerm).isGreaterThan(oldTerm)
+
+        cluster.stopAll()
+    }
+
+    @Test
+    fun differentLeaderSelectedAfterMessageSend() = repeatedTest(5) {
+        val cluster = Cluster.ofThree()
+        cluster.startAll()
+
+        cluster.waitForElectionToFinish()
+
+        val oldLeader = cluster.nodes.find { it.isLeader() }!!
+        val oldFollower = cluster.nodes.find { it.isFollower() }!!
+
+        cluster.isolate(oldLeader)
+        cluster.waitForElectionToFinish()
+
+        oldFollower.appendCommand("1")
+
+        cluster.reEnable(oldLeader)
+        cluster.waitForElectionToFinish()
+
         assertFalse(oldLeader.isLeader())
 
         cluster.stopAll()

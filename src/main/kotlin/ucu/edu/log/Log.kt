@@ -23,8 +23,6 @@ class Log {
     }
 
     fun tryAppend(req: AppendEntries.Request): Boolean {
-        println("tryAppend $req")
-
         if (req.prevLogIndex != 0 && this[req.prevLogIndex]?.term != req.prevLogTerm) return false
 
         if (req.entries.isEmpty()) return true

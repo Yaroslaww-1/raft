@@ -15,8 +15,9 @@ class Leader(val node: Node) : State {
 
     override fun start() {
         heartbeatTimer = fixedRateTimer("Leader heartbeat", initialDelay = 0, period = 50) {
-            println("leader STARTING TO SEND $node ${Instant.now()}")
+            println("[${Instant.now()}] leader ${node.id} STARTING TO SEND $node ${node.clients.filter { it.isConnected() }.map { it.destinationId() }} connected")
             runBlocking {
+                yield()
                 node.clients
                     .map {
                         val prevLogIndex = nextIndex[it]!! - 1
@@ -24,7 +25,6 @@ class Leader(val node: Node) : State {
 
                         val entries = node.log.startingFrom(prevLogIndex + 1).map { e -> AppendEntries.LogEntry(e.term, e.command) }
 
-                        println("prevLogIndex $prevLogIndex ${nextIndex[it]!!}")
                         val request = AppendEntries.Request(
                             node.term,
                             node.id,
@@ -37,16 +37,18 @@ class Leader(val node: Node) : State {
                         yield()
 
                         async {
-                            println("leader sends $node-${node.id} -> ${it.destinationId()} ${Instant.now()}")
                             val response = it.appendEntries(request)
                             if (response == null) null else Triple(it, response, entries)
                         }
                     }
                     .mapNotNull { withTimeoutOrNull(30) { it.await() } }
                     .forEach { (client, response, entries) ->
+                        yield()
+
                         if (response.term > node.term) {
                             node.term = response.term
                             node.votedFor = null
+                            println("transit 1")
                             node.transitTo(Follower(node))
                             return@runBlocking
                         }
@@ -68,17 +70,16 @@ class Leader(val node: Node) : State {
                 }
                 .lastOrNull()
             if (newCommit != null) {
-                println("Leader ${node.id} commit to $newCommit")
+                println("[${Instant.now()}] leader ${node.id} COMMIT $newCommit")
                 node.log.commit(newCommit)
             }
         }
     }
 
     override fun stop() {
-        println("leader ${node} trying to cancel ${Instant.now()}")
         heartbeatTimer!!.cancel()
-        println("leader ${node} cancelled ${Instant.now()}")
         heartbeatTimer!!.purge()
+        println("leader ${node} cancelled ${Instant.now()}")
     }
 
     override suspend fun requestVote(req: RequestVote.Request): RequestVote.Response {
@@ -87,6 +88,7 @@ class Leader(val node: Node) : State {
         if (granted) {
             node.term = req.term
             node.votedFor = req.candidateId
+            println("transit 2")
             node.transitTo(Follower(node))
         }
 
@@ -94,18 +96,24 @@ class Leader(val node: Node) : State {
     }
 
     override suspend fun appendEntries(req: AppendEntries.Request): AppendEntries.Response {
+        if (req.term < node.term) return AppendEntries.Response(node.term, false)
+
         if (req.term > node.term) {
             node.term = req.term
             node.votedFor = null
+            println("transit 3")
             node.transitTo(Follower(node))
         }
 
-        if (req.leaderId != node.id) {
-            println("Multiple leaders ${req.leaderId}")
+        val appended = node.log.tryAppend(req);
+
+        if (req.leaderId != node.id && appended) {
+            println("Multiple leaders $req")
+            println("transit 4")
             node.transitTo(Follower(node))
         }
 
-        return AppendEntries.Response(node.term, true)
+        return AppendEntries.Response(node.term, appended)
     }
 
     fun appendCommand(command: String) {

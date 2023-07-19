@@ -31,16 +31,15 @@ class Node(
     fun stateName() = state.javaClass.simpleName
 
     fun canVote(candidate: RequestVote.Request): Boolean {
+        println("canVote id=${id} candidate=$candidate $term $votedFor ${log.isNotEmpty()} ${log.lastTerm()} ${log.prevIndex()}")
         if (candidate.term < term) return false
 
-        if (candidate.term == term) return (votedFor == null || votedFor == candidate.candidateId)
-
-        if (candidate.term > term) {
-            if (log.isNotEmpty() && candidate.lastLogTerm < log.lastTerm()) return false
-            if (log.isNotEmpty() && candidate.lastLogTerm == log.lastTerm() && candidate.lastLogIndex < log.prevIndex()) return false
+        if (votedFor == null || votedFor == candidate.candidateId) {
+            if (candidate.lastLogTerm > log.lastTerm()) return true
+            if (candidate.lastLogTerm == log.lastTerm() && candidate.lastLogIndex >= log.prevIndex()) return true
         }
 
-        return true
+        return false
     }
 
     fun start() {
@@ -54,20 +53,22 @@ class Node(
     }
 
     fun transitTo(state: State) {
-        println("[${Instant.now()}] node $id to ${state.javaClass.simpleName}")
+        println("[${Instant.now()}] node $id to ${state.javaClass.simpleName} with term=$term")
         this.state.stop()
         this.state = state
         if (running) this.state.start()
     }
 
     suspend fun requestVote(req: RequestVote.Request): RequestVote.Response {
-        println("[${Instant.now()}] ${stateName()} ${id} requestVote from ${req.candidateId}")
-        return this.state.requestVote(req)
+        val response = this.state.requestVote(req)
+        println("[${Instant.now()}] ${stateName()} ${id} requestVote from candidateId=${req.candidateId} $response")
+        return response
     }
 
     suspend fun appendEntries(req: AppendEntries.Request): AppendEntries.Response {
-        println("[${Instant.now()}] ${stateName()} ${id} appendEntries ${req.leaderId} ${req.entries}")
-        return this.state.appendEntries(req)
+        val response = this.state.appendEntries(req)
+        println("[${Instant.now()}] ${stateName()} ${id} appendEntries $req from leaderId=${req.leaderId} ${req.entries} $response")
+        return response
     }
 
     suspend fun appendCommand(command: String, depth: Int = 0) {

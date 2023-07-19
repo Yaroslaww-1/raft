@@ -22,7 +22,7 @@ class Candidate(val node: Node) : State {
     }
 
     private suspend fun startLeaderElection() {
-        println("node ${node} ${node.id} START LEADER ELECTION")
+        println("node ${node} ${node.id} START LEADER ELECTION $node ${node.clients.filter { it.isConnected() }.map { it.destinationId() }} connected")
         node.term++
 
         val votes = mutableSetOf<Int>()
@@ -64,10 +64,15 @@ class Candidate(val node: Node) : State {
                 }
             }
 
-        delay((150L..300L).random())
+        delay((250L..400L).random())
     }
 
     override suspend fun requestVote(req: RequestVote.Request): RequestVote.Response {
+        if (req.term > node.term) {
+            node.term = req.term
+            node.votedFor = req.candidateId
+        }
+
         val granted = node.canVote(req)
 
         if (granted) {
@@ -82,13 +87,10 @@ class Candidate(val node: Node) : State {
     override suspend fun appendEntries(req: AppendEntries.Request): AppendEntries.Response {
         if (req.term < node.term) return AppendEntries.Response(node.term, false)
 
-        if (req.leaderId != node.id) {
-            node.transitTo(Follower(node))
-        }
-
         node.term = req.term
         node.votedFor = null
         node.transitTo(Follower(node))
+
         return AppendEntries.Response(node.term, node.log.tryAppend(req))
     }
 }
