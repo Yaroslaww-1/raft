@@ -22,7 +22,7 @@ class Log {
         entries.add(LogEntry(term, command))
     }
 
-    fun tryAppend(req: AppendEntries.Request): Boolean {
+    @Synchronized fun tryAppend(req: AppendEntries.Request): Boolean {
         if (req.prevLogIndex != 0 && this[req.prevLogIndex]?.term != req.prevLogTerm) return false
 
         if (req.entries.isEmpty()) return true
@@ -56,7 +56,7 @@ class Log {
         if (index > prevIndex()) {
             appendAll(newEntries)
         } else {
-            println(index)
+            println("$index > ${prevIndex()}")
             var insertIndex = index
             for (entry in newEntries) {
                 val conflict = this[insertIndex]?.term != entry.term
