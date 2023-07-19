@@ -46,6 +46,6 @@ class LocalClient : Client {
     }
 
     override suspend fun appendCommand(command: String, depth: Int) {
-        if (connected) destination.appendCommand(command, depth)
+        destination.appendCommand(command, depth)
     }
 }
