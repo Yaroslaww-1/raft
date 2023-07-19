@@ -49,28 +49,28 @@ class Cluster(
     suspend fun stopAll() {
         nodes.forEach { it.stop() }
         nodes.forEach { println("node ${it} TRYING TO STOP") }
-        delay(500)
+        delay(2000)
         nodes.forEach { println("node ${it} STOPPED") }
     }
 
     fun isolate(node: Node) {
-        println("[${Instant.now()}] isolating ${node.id}")
-        clients.find { it.destinationId() == node.id }!!.isolate()
-        clients.find { it.sourceId() == node.id }!!.isolate()
+        println("[${Instant.now()}] ---------ISOLATING ${node.id}")
+        clients.filter { it.destinationId() == node.id }.forEach { it.isolate() }
+        clients.filter { it.sourceId() == node.id }.forEach { it.isolate() }
     }
 
     fun reEnable(node: Node) {
-        println("[${Instant.now()}] reEnabling ${node.id}")
-        clients.find { it.destinationId() == node.id }!!.connect()
-        clients.find { it.sourceId() == node.id }!!.connect()
+        println("[${Instant.now()}] ---------RE-ENABLING ${node.id}")
+        clients.filter { it.destinationId() == node.id }.forEach { it.connect() }
+        clients.filter { it.sourceId() == node.id }.forEach { it.connect() }
     }
 
     suspend fun waitForElectionToFinish() {
-        delay(1000)
+        delay(2000)
     }
 
     suspend fun waitForReplicationToFinish() {
-        delay(1000)
+        delay(2000)
     }
 
     fun assertSingleLeaderPresent() {

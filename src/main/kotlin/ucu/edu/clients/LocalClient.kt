@@ -10,9 +10,17 @@ class LocalClient : Client {
     private lateinit var destination: Node
     private var connected = true
 
-    override fun sourceId(): Int = sourceId
+    override fun sourceId(): Int {
+        return sourceId
+    }
 
-    override fun destinationId(): Int = destination.id
+    override fun destinationId(): Int {
+        return destination.id
+    }
+
+    override fun isConnected(): Boolean {
+        return connected
+    }
 
     fun initialize(sourceId: Int, backend: Node) {
         this.sourceId = sourceId
@@ -38,6 +46,6 @@ class LocalClient : Client {
     }
 
     override suspend fun appendCommand(command: String, depth: Int) {
-        destination.appendCommand(command, depth)
+        if (connected) destination.appendCommand(command, depth)
     }
 }

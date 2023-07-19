@@ -11,6 +11,7 @@ interface Client {
     fun isolate()
     fun connect()
 
+    fun isConnected(): Boolean
     fun sourceId(): Int
     fun destinationId(): Int
 }
