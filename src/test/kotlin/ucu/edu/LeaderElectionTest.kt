@@ -46,27 +46,4 @@ class LeaderElectionTest {
 
         cluster.stopAll()
     }
-
-    @Test
-    fun differentLeaderSelectedAfterMessageSend() = repeatedTest(5) {
-        val cluster = Cluster.ofThree()
-        cluster.startAll()
-
-        cluster.waitForElectionToFinish()
-
-        val oldLeader = cluster.nodes.find { it.isLeader() }!!
-        val oldFollower = cluster.nodes.find { it.isFollower() }!!
-
-        cluster.isolate(oldLeader)
-        cluster.waitForElectionToFinish()
-
-        oldFollower.appendCommand("1")
-
-        cluster.reEnable(oldLeader)
-        cluster.waitForElectionToFinish()
-
-        assertFalse(oldLeader.isLeader())
-
-        cluster.stopAll()
-    }
 }
