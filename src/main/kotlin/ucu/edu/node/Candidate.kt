@@ -55,7 +55,7 @@ class Candidate(val node: Node) : State {
                 }
 
                 if (response.voteGranted) {
-                    votes.add(client.nodeId())
+                    votes.add(client.destinationId())
                 }
 
                 if (votes.size >= requiredVotes) {

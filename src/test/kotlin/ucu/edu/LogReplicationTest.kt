@@ -76,11 +76,7 @@ class LogReplicationTest {
 
         cluster.waitForReplicationToFinish()
 
-        val expected = listOf("1", "3", "2")
-
-        for (node in cluster.nodes) {
-            assertEquals(expected, node.getCommands())
-        }
+        cluster.assertAllRunningNodesHaveCommand(listOf("1", "3", "2"))
 
         cluster.stopAll()
     }

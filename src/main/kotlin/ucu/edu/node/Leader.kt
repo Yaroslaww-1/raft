@@ -37,7 +37,7 @@ class Leader(val node: Node) : State {
                         yield()
 
                         async {
-                            println("leader sends $node-${node.id} -> ${it.nodeId()} ${Instant.now()}")
+                            println("leader sends $node-${node.id} -> ${it.destinationId()} ${Instant.now()}")
                             val response = it.appendEntries(request)
                             if (response == null) null else Triple(it, response, entries)
                         }
@@ -54,11 +54,7 @@ class Leader(val node: Node) : State {
                         if (response.success) {
                             nextIndex[client] = nextIndex[client]!! + entries.size
                             matchIndex[client] = matchIndex[client]!! + entries.size
-//                                } else {
-//                                    matchIndex[client] = nextIndex[client]!!
-//                                }
                         } else {
-                            println("DECCC")
                             nextIndex[client] = nextIndex[client]!! - 1
                         }
                     }

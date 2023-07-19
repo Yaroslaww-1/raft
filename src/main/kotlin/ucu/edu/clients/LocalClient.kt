@@ -6,36 +6,38 @@ import ucu.edu.proto.AppendEntries
 import ucu.edu.proto.RequestVote
 
 class LocalClient : Client {
-    private lateinit var backend: Node
-    private var enabled = true
+    private var sourceId: Int = -1
+    private lateinit var destination: Node
+    private var connected = true
 
-    fun initialize(backend: Node) {
-        this.backend = backend
+    override fun sourceId(): Int = sourceId
+
+    override fun destinationId(): Int = destination.id
+
+    fun initialize(sourceId: Int, backend: Node) {
+        this.sourceId = sourceId
+        this.destination = backend
     }
 
-    override fun disable() {
-        enabled = false
+    override fun isolate() {
+        connected = false
     }
 
-    override fun reEnable() {
-        enabled = true
+    override fun connect() {
+        connected = true
     }
 
     override suspend fun requestVote(req: RequestVote.Request): RequestVote.Response? {
         delay((5..10).random().toLong())
-        return if (enabled) backend.requestVote(req) else null
+        return if (connected) destination.requestVote(req) else null
     }
 
     override suspend fun appendEntries(req: AppendEntries.Request): AppendEntries.Response? {
         delay((5..10).random().toLong())
-        return if (enabled) backend.appendEntries(req) else null
+        return if (connected) destination.appendEntries(req) else null
     }
 
     override suspend fun appendCommand(command: String, depth: Int) {
-        backend.appendCommand(command, depth)
-    }
-
-    override fun nodeId(): Int {
-        return backend.id
+        destination.appendCommand(command, depth)
     }
 }

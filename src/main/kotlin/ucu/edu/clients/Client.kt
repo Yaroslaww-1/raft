@@ -8,8 +8,9 @@ interface Client {
     suspend fun appendEntries(req: AppendEntries.Request): AppendEntries.Response?
     suspend fun appendCommand(command: String, depth: Int)
 
-    fun disable()
-    fun reEnable()
+    fun isolate()
+    fun connect()
 
-    fun nodeId(): Int
+    fun sourceId(): Int
+    fun destinationId(): Int
 }
