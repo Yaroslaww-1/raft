@@ -112,11 +112,12 @@ class LogReplicationTest {
         cluster.waitForElectionToFinish()
 
         // Step 5 - Post msg3, msg4
-        cluster.nodes.first().appendCommand("3")
-        cluster.nodes.first().appendCommand("4")
+        val mainCluster = cluster.nodes.filter { it.id != oldLeader.id }
+        mainCluster.first().appendCommand("3")
+        mainCluster.first().appendCommand("4")
         cluster.waitForReplicationToFinish()
         //  messages should be replicated and committed
-        for (node in cluster.nodes.filter { it.id != oldLeader.id }) {
+        for (node in mainCluster) {
             assertEquals(listOf("1", "2", "3", "4"), node.getCommands())
         }
 
