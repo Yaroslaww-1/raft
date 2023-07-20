@@ -32,6 +32,7 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation:$ktor_version")
     implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
+    implementation("io.ktor:ktor-server-config-yaml:$ktor_version")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2")
 

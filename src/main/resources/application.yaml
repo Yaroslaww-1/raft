@@ -1,0 +1,8 @@
+ktor:
+  application:
+    modules:
+      - ucu.edu.ApplicationKt.module
+  deployment:
+    port: $PORT
+  raft:
+    clients: $RAFT_CLIENTS
