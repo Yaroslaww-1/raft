@@ -1,0 +1,42 @@
+version: '3.9'
+
+services:
+  raft_node1:
+    container_name: raft_node1
+    restart: always
+    build: .
+    environment:
+      - PORT=8001
+      - RAFT_CLIENTS=raft_node2:8002,raft_node3:8003
+    ports:
+      - "8001:8001"
+    networks:
+      - raft_network
+
+  raft_node2:
+    container_name: raft_node2
+    restart: always
+    build: .
+    environment:
+      - PORT=8002
+      - RAFT_CLIENTS=raft_node1:8001,raft_node3:8003
+    ports:
+      - "8002:8002"
+    networks:
+      - raft_network
+
+  raft_node3:
+    container_name: raft_node3
+    restart: always
+    build: .
+    environment:
+      - PORT=8003
+      - RAFT_CLIENTS=raft_node1:8001,raft_node2:8002
+    ports:
+      - "8003:8003"
+    networks:
+      - raft_network
+
+networks:
+  raft_network:
+    driver: bridge

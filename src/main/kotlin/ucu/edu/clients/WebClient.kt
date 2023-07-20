@@ -27,21 +27,21 @@ class WebClient(val destinationId: Int, val destinationHost: String) : Client {
     override fun destinationId(): Int = destinationId
 
     override suspend fun requestVote(req: RequestVote.Request): RequestVote.Response? {
-        return client.post("$destinationHost/requestVote") {
+        return client.post("http://$destinationHost/requestVote") {
             contentType(ContentType.Application.Json)
             setBody(req)
         }.body()
     }
 
     override suspend fun appendEntries(req: AppendEntries.Request): AppendEntries.Response? {
-        return client.post("$destinationHost/appendEntries") {
+        return client.post("http://$destinationHost/appendEntries") {
             contentType(ContentType.Application.Json)
             setBody(req)
         }.body()
     }
 
     override suspend fun appendCommand(req: AppendCommand.Request) {
-        return client.post("$destinationHost/appendCommand") {
+        return client.post("http://$destinationHost/appendCommand") {
             contentType(ContentType.Application.Json)
             setBody(req)
         }.body()
