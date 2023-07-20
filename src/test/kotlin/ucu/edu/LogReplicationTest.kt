@@ -1,11 +1,10 @@
 package ucu.edu
 
+import ucu.edu.proto.AppendCommand
 import ucu.edu.utils.Cluster
 import ucu.edu.utils.repeatedTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 class LogReplicationTest {
     @Test
@@ -17,9 +16,9 @@ class LogReplicationTest {
 
         val leader = cluster.nodes.filter { it.isLeader() }.first()
 
-        leader.appendCommand("1")
-        leader.appendCommand("3")
-        leader.appendCommand("2")
+        leader.appendCommand(command("1"))
+        leader.appendCommand(command("3"))
+        leader.appendCommand(command("2"))
 
         cluster.waitForReplicationToFinish()
 
@@ -44,9 +43,9 @@ class LogReplicationTest {
 
         cluster.isolate(follower)
 
-        leader.appendCommand("1")
-        leader.appendCommand("3")
-        leader.appendCommand("2")
+        leader.appendCommand(command("1"))
+        leader.appendCommand(command("3"))
+        leader.appendCommand(command("2"))
 
         cluster.waitForReplicationToFinish()
 
@@ -72,9 +71,9 @@ class LogReplicationTest {
 
         val follower = cluster.nodes.filter { it.isFollower() }.first()
 
-        follower.appendCommand("1")
-        follower.appendCommand("3")
-        follower.appendCommand("2")
+        follower.appendCommand(command("1"))
+        follower.appendCommand(command("3"))
+        follower.appendCommand(command("2"))
 
         cluster.waitForReplicationToFinish()
 
@@ -94,8 +93,8 @@ class LogReplicationTest {
         cluster.assertSingleLeaderPresent()
 
         // Step 2 - Post msg1, msg2
-        cluster.nodes.first().appendCommand("1")
-        cluster.nodes.first().appendCommand("2")
+        cluster.nodes.first().appendCommand(command("1"))
+        cluster.nodes.first().appendCommand(command("2"))
         cluster.waitForReplicationToFinish()
         //  messages should be replicated and committed
         cluster.assertAllRunningNodesHaveCommand(listOf("1", "2"))
@@ -113,8 +112,8 @@ class LogReplicationTest {
 
         // Step 5 - Post msg3, msg4
         val mainCluster = cluster.nodes.filter { it.id != oldLeader.id }
-        mainCluster.first().appendCommand("3")
-        mainCluster.first().appendCommand("4")
+        mainCluster.first().appendCommand(command("3"))
+        mainCluster.first().appendCommand(command("4"))
         cluster.waitForReplicationToFinish()
         //  messages should be replicated and committed
         for (node in mainCluster) {
@@ -122,7 +121,7 @@ class LogReplicationTest {
         }
 
         // Step 6 - Post msg5 via OldLeader
-        oldLeader.appendCommand("5")
+        oldLeader.appendCommand(command("5"))
         cluster.waitForReplicationToFinish()
 
         // Step 7 - Join cluster
@@ -132,5 +131,9 @@ class LogReplicationTest {
         cluster.assertAllRunningNodesHaveCommand(listOf("1", "2", "3", "4"))
 
         cluster.stopAll()
+    }
+
+    private fun command(text: String): AppendCommand.Request {
+        return AppendCommand.Request(text, 0)
     }
 }

@@ -2,6 +2,7 @@ package ucu.edu.clients
 
 import kotlinx.coroutines.delay
 import ucu.edu.node.Node
+import ucu.edu.proto.AppendCommand
 import ucu.edu.proto.AppendEntries
 import ucu.edu.proto.RequestVote
 
@@ -10,7 +11,7 @@ class LocalClient : Client {
     private lateinit var destination: Node
     private var connected = true
 
-    override fun sourceId(): Int {
+    fun sourceId(): Int {
         return sourceId
     }
 
@@ -18,7 +19,7 @@ class LocalClient : Client {
         return destination.id
     }
 
-    override fun isConnected(): Boolean {
+    fun isConnected(): Boolean {
         return connected
     }
 
@@ -27,11 +28,11 @@ class LocalClient : Client {
         this.destination = backend
     }
 
-    override fun isolate() {
+    fun isolate() {
         connected = false
     }
 
-    override fun connect() {
+    fun connect() {
         connected = true
     }
 
@@ -45,7 +46,7 @@ class LocalClient : Client {
         return if (connected) destination.appendEntries(req) else null
     }
 
-    override suspend fun appendCommand(command: String, depth: Int) {
-        destination.appendCommand(command, depth)
+    override suspend fun appendCommand(req: AppendCommand.Request) {
+        destination.appendCommand(req)
     }
 }

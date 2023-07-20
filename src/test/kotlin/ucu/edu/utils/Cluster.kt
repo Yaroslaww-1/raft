@@ -1,7 +1,6 @@
 package ucu.edu.utils
 
 import kotlinx.coroutines.delay
-import ucu.edu.clients.Client
 import ucu.edu.clients.LocalClient
 import ucu.edu.node.Node
 import java.time.Instant
@@ -9,7 +8,7 @@ import kotlin.test.assertEquals
 
 class Cluster(
     val nodes: List<Node>,
-    val clients: List<Client>
+    val clients: List<LocalClient>
 ) {
     companion object {
         fun ofThree(): Cluster {

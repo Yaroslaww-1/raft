@@ -22,7 +22,7 @@ class Candidate(val node: Node) : State {
     }
 
     private suspend fun startLeaderElection() {
-        println("node ${node} ${node.id} START LEADER ELECTION $node ${node.clients.filter { it.isConnected() }.map { it.destinationId() }} connected")
+        println("node ${node} ${node.id} START LEADER ELECTION $node")
         node.term++
 
         val votes = mutableSetOf<Int>()

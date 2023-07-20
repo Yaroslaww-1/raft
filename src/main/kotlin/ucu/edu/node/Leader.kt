@@ -1,6 +1,7 @@
 package ucu.edu.node
 
 import kotlinx.coroutines.*
+import ucu.edu.proto.AppendCommand
 import ucu.edu.proto.AppendEntries
 import ucu.edu.proto.RequestVote
 import java.time.Instant
@@ -15,7 +16,7 @@ class Leader(val node: Node) : State {
 
     override fun start() {
         heartbeatTimer = fixedRateTimer("Leader heartbeat", initialDelay = 0, period = 50) {
-            println("[${Instant.now()}] leader ${node.id} STARTING TO SEND $node ${node.clients.filter { it.isConnected() }.map { it.destinationId() }} connected")
+            println("[${Instant.now()}] leader ${node.id} STARTING TO SEND $node")
             runBlocking {
                 yield()
                 node.clients
@@ -116,7 +117,7 @@ class Leader(val node: Node) : State {
         return AppendEntries.Response(node.term, appended)
     }
 
-    fun appendCommand(command: String) {
-        node.log.append(node.term, command)
+    fun appendCommand(req: AppendCommand.Request) {
+        node.log.append(node.term, req.command)
     }
 }

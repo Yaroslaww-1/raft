@@ -6,6 +6,7 @@ import kotlinx.coroutines.coroutineScope
 import ucu.edu.clients.Client
 import ucu.edu.config.Config
 import ucu.edu.log.Log
+import ucu.edu.proto.AppendCommand
 import ucu.edu.proto.AppendEntries
 import ucu.edu.proto.RequestVote
 import java.time.Instant
@@ -71,21 +72,21 @@ class Node(
         return response
     }
 
-    suspend fun appendCommand(command: String, depth: Int = 0) {
-        if (depth > 1) return
+    suspend fun appendCommand(req: AppendCommand.Request) {
+        if (req.depth > 1) return
 
         if (!isLeader()) {
             clients
                 .map {
                     coroutineScope {
                         async {
-                            it.appendCommand(command, depth + 1)
+                            it.appendCommand(AppendCommand.Request(req.command, req.depth + 1))
                         }
                     }
                 }
                 .map { it.await() }
         } else {
-            (state as Leader).appendCommand(command)
+            (state as Leader).appendCommand(req)
         }
     }
 
