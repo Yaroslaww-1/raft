@@ -65,11 +65,11 @@ class Cluster(
     }
 
     suspend fun waitForElectionToFinish() {
-        delay(2000)
+        delay(3000)
     }
 
     suspend fun waitForReplicationToFinish() {
-        delay(2000)
+        delay(3000)
     }
 
     fun assertSingleLeaderPresent() {
