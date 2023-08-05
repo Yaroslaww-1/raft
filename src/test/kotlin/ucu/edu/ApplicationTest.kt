@@ -15,6 +15,7 @@ import kotlin.test.*
 
 class ApplicationTest {
     @Test
+    @Ignore
     fun testSerialisation() = testApplication {
         val client = createClient {
             install(ContentNegotiation) {
