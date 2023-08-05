@@ -21,7 +21,7 @@ class Node(
     var term: Int = 1
     var votedFor: Int? = null
     var running = true
-    var log = Log()
+    var log = Log(id)
 
     private var state: State = Follower(this)
 

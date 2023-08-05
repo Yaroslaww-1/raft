@@ -1,12 +1,13 @@
 package ucu.edu.log
 
 import ucu.edu.proto.AppendEntries
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.math.max
 import kotlin.math.min
 
 
-class Log {
-    private var entries = mutableListOf<LogEntry>()
+class Log(val nodeId: Int) {
+    private var entries = CopyOnWriteArrayList<LogEntry>()
 
     var commitIndex: Int = 0
         private set
@@ -23,11 +24,13 @@ class Log {
     }
 
     @Synchronized fun tryAppend(req: AppendEntries.Request): Boolean {
-        if (req.prevLogIndex != 0 && this[req.prevLogIndex]?.term != req.prevLogTerm) return false
+        if (req.prevLogIndex != 0 && this[req.prevLogIndex - 1]?.term != req.prevLogTerm) return false
 
         if (req.entries.isEmpty()) return true
 
-        insertStartingFrom(req.prevLogIndex + 1, req.entries.map { LogEntry(it.term, it.command) })
+        println("[$nodeId] Before insert $entries $req")
+        insertStartingFrom(req.prevLogIndex + 1 - 1, req.entries.map { LogEntry(it.term, it.command) }) // -1 because log is 1-indexed, +1 because it's PREV index
+        println("[$nodeId] After insert $entries $req")
 
         if (req.leaderCommit > commitIndex) {
             commit(req.leaderCommit)
@@ -63,13 +66,14 @@ class Log {
                 if (conflict) {
                     removeStartingFrom(insertIndex)
                 }
-                entries[insertIndex - 1] = entry
+                if (insertIndex >= entries.size) entries.add(entry)
+                entries[insertIndex] = entry
                 insertIndex++
             }
         }
     }
 
     private fun removeStartingFrom(index: Int) {
-        entries.subList(max(index - 1, 0), entries.size).clear()
+        entries.subList(index, entries.size).clear()
     }
 }
